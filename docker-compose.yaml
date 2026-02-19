@@ -1,0 +1,9 @@
+services:
+  janitor-ui:
+    build: .
+    container_name: janitor-ui
+    restart: unless-stopped
+    ports:
+      - "5500:5000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
