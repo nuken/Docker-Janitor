@@ -5,7 +5,6 @@ A lightweight, containerized web dashboard for managing and cleaning up Docker c
 Instead of relying on background cron jobs or running destructive CLI commands blindly, this Command Center provides a visual interface to safely manage stopped containers, unused images, orphaned volumes, build caches, and overgrown log files.
 
 
-
 ## ☰ Features
 
 * **Organized Dashboard:** View lists of stopped containers, unused/dangling images, and orphaned volumes before you delete them.
@@ -20,6 +19,7 @@ Instead of relying on background cron jobs or running destructive CLI commands b
 To keep the Command Center lightweight and secure, it does not run heavy background processes.
 * Standard cleanup commands are executed instantly via the Docker Engine API.
 * For complex tasks like **Log Truncation**, the Janitor uses a "Ghost Worker" pattern. It spawns a microscopic Alpine Linux container, mounts the host's log directory, executes a `truncate` command on the files, and immediately self-destructs, leaving zero trace.
+
 
 ## 🔧 Project Structure
 
@@ -78,3 +78,25 @@ services:
     image: postgres:13
     labels:
       - "janitor.skip=true"
+
+```
+
+## 🗜️ WSL Disk Optimizer (Windows Only)
+
+When using Docker Desktop with WSL on Windows, removing containers and images from the Janitor UI frees up space inside Docker, but the underlying Windows virtual disk (`ext4.vhdx`) does not automatically shrink.
+
+To completely reclaim this space on your host machine, you can use the included `Optimize-DockerWSL.ps1` PowerShell script.
+
+### What it does:
+* **Auto-Elevates:** Automatically checks for and requests the Administrator privileges required to manage disks.
+* **Graceful Shutdown:** Silently stops the Docker Desktop process and shuts down the WSL backend to safely detach the disk.
+* **Auto-Locates Disk:** Automatically searches the default `\data\` and `\main\` directories for your `ext4.vhdx` file (and prompts you for a custom path if it cannot be found).
+* **Compaction:** Generates and runs a background `diskpart` script to compact the virtual disk.
+* **Automatic Restart:** Restarts Docker Desktop automatically and provides a final report showing exactly how many gigabytes of space were reclaimed.
+
+### How to use it:
+1. Download the `Optimize-DockerWSL.ps1` from the `WSL_Disk_Optimizer` directory inside this project.
+2. Right-click on the `Optimize-DockerWSL.ps1` file and select **Run with PowerShell**.
+3. Accept the Administrator prompt when it appears.
+4. Follow the on-screen prompts and wait a few minutes for the script to finish compacting the disk.
+5. I recommend quitting Docker Desktop before you run this script to avoid a chance of database corruption.
